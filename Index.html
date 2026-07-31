@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulasi Problem Solving - KKA Kelas X</title>
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    /* Scratch-like block styling dengan notch */
+    .scratch-block {
+      border-radius: 6px;
+      padding: 10px 14px;
+      color: #fff;
+      font-weight: 600;
+      position: relative;
+      margin-bottom: 3px;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+      display: inline-block;
+      width: 100%;
+    }
+    .scratch-block::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 16px;
+      width: 24px;
+      height: 4px;
+      background: inherit;
+      border-bottom-left-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
+    .block-event { background-color: #d97706; border-left: 6px solid #b45309; }
+    .block-control { background-color: #2563eb; border-left: 6px solid #1d4ed8; }
+    .block-action { background-color: #059669; border-left: 6px solid #047857; }
+    .block-indent { margin-left: 24px; width: calc(100% - 24px); }
+    
+    /* Grid Robot */
+    .grid-cell {
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid #d1d5db;
+      font-size: 1.4rem;
+      border-radius: 8px;
+      background: #ffffff;
+      transition: all 0.2s;
+    }
+  </style>
+</head>
+<body class="bg-emerald-50 min-h-screen text-slate-800 flex flex-col justify-between">
+
+  <!-- NAVBAR / TOP BAR TEMA AL AZHAR -->
+  <header class="border-b border-emerald-800 bg-emerald-900 sticky top-0 z-50 shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-400 flex items-center justify-center font-bold text-emerald-950 text-lg shadow-md">
+          <i class="fa-solid fa-shapes"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-white text-base md:text-lg">Simulasi Problem Solving</h1>
+          <p class="text-xs text-emerald-200">KKA Kelas X-A & X-B &bull; SMA Islam Al Azhar</p>
+        </div>
+      </div>
+
+      <!-- Live Header Game -->
+      <div id="gameHeader" class="hidden items-center space-x-3 bg-emerald-950 px-4 py-1.5 rounded-full border border-emerald-700 text-sm">
+        <span class="text-emerald-100 truncate max-w-[220px]" id="hdrNamaDisplay"></span>
+        <span class="text-emerald-600">|</span>
+        <span class="text-amber-300 font-bold"><i class="fa-solid fa-star mr-1"></i>Total: <span id="hdrSkor">0</span></span>
+        <span class="text-emerald-600">|</span>
+        <span class="text-rose-400 font-bold flex items-center">
+          <i class="fa-solid fa-clock mr-1"></i>
+          <span id="hdrTimer">20</span>s
+        </span>
+      </div>
+
+      <!-- Tombol Admin -->
+      <button onclick="showAdminModal()" class="text-xs bg-emerald-800 hover:bg-emerald-700 text-emerald-100 px-3 py-2 rounded-lg border border-emerald-700 transition font-semibold">
+        <i class="fa-solid fa-lock mr-1"></i> Admin
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-5xl mx-auto px-4 py-8 flex-1 w-full flex items-center justify-center">
+
+    <!-- 1. HALAMAN LOGIN PESERTA -->
+    <div id="loginScreen" class="w-full max-w-md bg-white border border-emerald-200 p-8 rounded-2xl shadow-xl">
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-emerald-900">Mulai Ujian Simulasi</h2>
+        <p class="text-sm text-slate-500 mt-1">Satu sesi berisi 10 Soal Robot & 10 Soal Logika</p>
+      </div>
+
+      <div class="space-y-4">
+        <!-- 1. PILIH KELAS -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-emerald-800 mb-2">1. Pilih Kelas</label>
+          <select id="selectKelas" onchange="filterSiswa()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-600 text-slate-800 font-medium">
+            <option value="">-- Pilih Kelas --</option>
+            <option value="X-A">Kelas X-A</option>
+            <option value="X-B">Kelas X-B</option>
+          </select>
+        </div>
+
+        <!-- 2. INPUT PESERTA 1 (SEARCHABLE) -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-emerald-800 mb-2">2. Nama Peserta 1</label>
+          <div class="relative">
+            <input type="text" id="searchNama1" oninput="showDropdown(1)" onfocus="showDropdown(1)" placeholder="Cari & pilih nama kamu..." disabled 
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-600 font-medium">
+            <div id="dropdownList1" class="hidden absolute z-30 left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg divide-y divide-slate-100 custom-scrollbar">
+            </div>
+          </div>
+        </div>
+
+        <!-- TOMBOL TOGGLE PESERTA 2 -->
+        <div id="togglePartnerContainer" class="pt-1">
+          <button type="button" id="btnShowPartner" onclick="togglePartner(true)" class="w-full border-2 border-dashed border-emerald-600/60 hover:border-emerald-600 bg-emerald-50/50 hover:bg-emerald-50 text-emerald-700 font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center">
+            <i class="fa-solid fa-user-plus mr-2"></i> + Mengerjakan Berpasangan (2 Orang)
+          </button>
+        </div>
+
+        <!-- 3. INPUT PESERTA 2 (HIDDEN DEFAULT) -->
+        <div id="partnerContainer" class="hidden space-y-2 pt-2 border-t border-slate-200 animate-fadeIn">
+          <div class="flex justify-between items-center">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-emerald-800">Nama Peserta 2 (Pasangan)</label>
+            <button type="button" onclick="togglePartner(false)" class="text-xs text-rose-600 hover:text-rose-700 font-semibold">
+              <i class="fa-solid fa-xmark mr-1"></i>Batal Berpasangan
+            </button>
+          </div>
+          <div class="relative">
+            <input type="text" id="searchNama2" oninput="showDropdown(2)" onfocus="showDropdown(2)" placeholder="Cari & pilih nama pasangan..." 
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-600 font-medium">
+            <div id="dropdownList2" class="hidden absolute z-30 left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg divide-y divide-slate-100 custom-scrollbar">
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-start space-x-2">
+          <i class="fa-solid fa-triangle-exclamation mt-0.5 text-amber-600"></i>
+          <span>Waktu pengerjaan <strong>20 detik/soal</strong>. Dilarang keluar dari layar penuh atau pindah tab, atau soal akan dilewati otomatis.</span>
+        </div>
+
+        <button onclick="startExam()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-700/20 transition duration-200">
+          Mulai Ujian Sekarang <i class="fa-solid fa-arrow-right ml-2"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. SCREEN GAME 1: NAVIGASI ROBOT (10 SOAL) -->
+    <div id="gameRobotScreen" class="hidden w-full max-w-3xl bg-white border border-emerald-100 rounded-2xl p-6 shadow-xl">
+      <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+        <div>
+          <span class="text-xs font-bold text-emerald-600 uppercase">Bagian 1: Navigasi Robot</span>
+          <h3 id="robotTitle" class="text-xl font-bold text-emerald-950">Soal 1 dari 10</h3>
+        </div>
+        <div class="text-sm text-slate-600 font-medium" id="robotInstruction">Arahkan Robot (🤖) menuju Target (🏁).</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div class="flex justify-center bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div id="gridBoard" class="grid grid-cols-5 gap-1.5"></div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block text-xs font-bold text-slate-500 mb-3 uppercase">Pilih Perintah Langkah:</label>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="addCmd('MAJU')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold shadow"><i class="fa-solid fa-arrow-up mr-1"></i> Maju</button>
+              <button onclick="addCmd('KIRI')" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-bold shadow"><i class="fa-solid fa-rotate-left mr-1"></i> Kiri</button>
+              <button onclick="addCmd('KANAN')" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-bold shadow"><i class="fa-solid fa-rotate-right mr-1"></i> Kanan</button>
+              <button onclick="clearCmd()" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-2 rounded-lg text-xs font-bold shadow"><i class="fa-solid fa-trash"></i></button>
+            </div>
+
+            <div class="mt-4">
+              <span class="text-xs font-bold text-slate-500 uppercase">Susunan Blok Anda:</span>
+              <div id="cmdQueue" class="min-h-[44px] bg-white border border-slate-300 rounded-lg p-2.5 mt-1 flex flex-wrap gap-1.5 text-xs font-mono"></div>
+            </div>
+          </div>
+
+          <button onclick="submitRobot()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
+            Jalankan Robot <i class="fa-solid fa-play ml-1"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. SCREEN GAME 2: ANALISA LOGIKA SCRATCH (10 SOAL) -->
+    <div id="gameScratchScreen" class="hidden w-full max-w-2xl bg-white border border-emerald-100 rounded-2xl p-6 shadow-xl">
+      <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+        <div>
+          <span class="text-xs font-bold text-amber-600 uppercase">Bagian 2: Analisa Logika Blok</span>
+          <h3 id="scratchTitle" class="text-xl font-bold text-emerald-950">Soal 1 dari 10</h3>
+        </div>
+      </div>
+
+      <!-- Blok Visualisasi -->
+      <div id="scratchBlockContainer" class="bg-slate-900 p-6 rounded-xl border border-slate-800 mb-6 font-mono text-sm space-y-1 shadow-inner">
+        <!-- Diisi dinamis -->
+      </div>
+
+      <!-- Pertanyaan -->
+      <div class="space-y-4">
+        <p id="scratchQuestion" class="font-bold text-lg text-slate-800"></p>
+        <div id="scratchOptions" class="grid grid-cols-1 gap-2.5">
+          <!-- Pilihan ganda dinamis -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. SCREEN HASIL & PEMBAHASAN PESERTA -->
+    <div id="resultScreen" class="hidden w-full max-w-3xl bg-white border border-emerald-200 rounded-2xl p-6 shadow-xl space-y-6">
+      <div class="text-center border-b border-slate-200 pb-6">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-3xl mx-auto mb-3 border border-emerald-300">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <h2 class="text-2xl font-extrabold text-emerald-950">Ujian Telah Selesai!</h2>
+        <p class="text-sm text-slate-500 mt-1">Nilai peserta otomatis tersimpan ke baris masing-masing di database.</p>
+        
+        <div class="grid grid-cols-3 gap-3 max-w-md mx-auto mt-6">
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <span class="text-[10px] font-bold text-slate-500 uppercase block">1. Robot</span>
+            <span id="scoreRobotDisplay" class="text-2xl font-black text-emerald-700">0</span>
+            <span class="text-[10px] text-slate-400">/ 50</span>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <span class="text-[10px] font-bold text-slate-500 uppercase block">2. Logika</span>
+            <span id="scoreLogikaDisplay" class="text-2xl font-black text-amber-600">0</span>
+            <span class="text-[10px] text-slate-400">/ 50</span>
+          </div>
+          <div class="bg-emerald-900 p-3 rounded-xl border border-emerald-800 text-white">
+            <span class="text-[10px] font-bold text-emerald-200 uppercase block">Total Nilai</span>
+            <span id="finalScoreDisplay" class="text-2xl font-black text-amber-400">0</span>
+            <span class="text-[10px] text-emerald-300">/ 100</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daftar Pembahasan Soal -->
+      <div>
+        <h4 class="font-bold text-slate-800 mb-3 flex items-center">
+          <i class="fa-solid fa-list-check mr-2 text-emerald-600"></i> Pembahasan Soal & Jawaban
+        </h4>
+        <div id="reviewList" class="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+          <!-- Diisi otomatis melalui JS -->
+        </div>
+      </div>
+
+      <button onclick="location.reload()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-xl transition">
+        Kembali ke Beranda
+      </button>
+    </div>
+
+    <!-- 5. SCREEN ADMIN DASHBOARD -->
+    <div id="adminScreen" class="hidden w-full max-w-5xl bg-white border border-slate-200 rounded-2xl p-6 shadow-xl space-y-8">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-4">
+        <div>
+          <h2 class="text-xl font-bold text-emerald-950 flex items-center">
+            <i class="fa-solid fa-chart-line text-emerald-600 mr-2"></i> Dashboard Statistik Admin
+          </h2>
+          <p class="text-xs text-slate-500">Pantau peringkat dan nilai siswa secara aktual.</p>
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="fetchAdminData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition"><i class="fa-solid fa-rotate mr-1"></i> Refresh</button>
+          <button onclick="location.reload()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition"><i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar</button>
+        </div>
+      </div>
+
+      <!-- PODIUM 3 JUARA TERATAS -->
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4 text-center">3 Juara Nilai Teratas (Top Ranking)</h3>
+        <div id="podiumContainer" class="grid grid-cols-3 gap-3 max-w-2xl mx-auto items-end">
+          <!-- Podium dari JS -->
+        </div>
+      </div>
+
+      <!-- DIAGRAM GRAFIK SKOR -->
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Grafik Perolehan Total Nilai Siswa</h4>
+        <div class="h-64">
+          <canvas id="scoreChart"></canvas>
+        </div>
+      </div>
+
+      <!-- TABEL DAFTAR NILAI -->
+      <div>
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Seluruh Riwayat Ujian</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-100 text-slate-600 text-xs uppercase font-bold">
+                <th class="p-3">Waktu</th>
+                <th class="p-3">Nama Siswa</th>
+                <th class="p-3">Kelas</th>
+                <th class="p-3">Robot</th>
+                <th class="p-3">Logika</th>
+                <th class="p-3">Total (100)</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody" class="divide-y divide-slate-100">
+              <!-- Diisi via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-200">
+    &copy; 2026 KKA Problem Solving &bull; Al Azhar Semarang System &bull; Powered by Google Apps Script
+  </footer>
+
+  <!-- MODAL PASSWORD ADMIN -->
+  <div id="adminModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+      <h3 class="font-bold text-emerald-950 text-lg mb-2">Masuk Mode Admin</h3>
+      <p class="text-xs text-slate-500 mb-4">Masukkan kode akses untuk melihat statistik & ranking siswa.</p>
+      <input type="password" id="adminPassInput" placeholder="Password Admin (admin123)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm mb-4 focus:outline-none focus:border-emerald-600">
+      <div class="flex space-x-2">
+        <button onclick="hideAdminModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl transition">Batal</button>
+        <button onclick="verifyAdmin()" class="w-1/2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold py-2.5 rounded-xl transition">Masuk</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // KONFIGURASI URL GOOGLE APPS SCRIPT (SUDAH DIPERBARUI)
+    // ==========================================
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxHH1mUN2eMFzGcfu_LRQ3dbhVMImNemE_eGtsVdaeyCd75lPwtdE9AzokOiPS_rkbutg/exec";
+
+    // STATE DATA & KELOMPOK
+    let siswaData = [];
+    let currentKelas = "";
+    let isPartnerMode = false;
+    
+    // STATE UJIAN
+    let currentStage = 1; // 1 = Robot, 2 = Logika
+    let currentQuestionIndex = 0;
+    let scoreRobot = 0;
+    let scoreLogika = 0;
+    let timerInterval = null;
+    let timeLeft = 20;
+    let userReviewLog = [];
+    let scoreChartInstance = null;
+
+    // DATA SOAL ROBOT (10 LEVEL - 5 Poin/soal -> Max 50)
+    const robotLevels = [
+      { start: [2,0], target: [2,4], obs: [[2,2]], winCmds: ['MAJU','KIRI','MAJU','KANAN','MAJU','KANAN','MAJU'], label: "Lewati penghalang batu di tengah" },
+      { start: [4,0], target: [0,0], obs: [[2,0]], winCmds: ['KANAN','MAJU','KIRI','MAJU','MAJU','KIRI','MAJU'], label: "Gunakan jalur alternatif ke kanan" },
+      { start: [0,0], target: [0,4], obs: [[0,2]], winCmds: ['KANAN','MAJU','KIRI','MAJU','MAJU','KIRI','MAJU'], label: "Hindari rintangan batu" },
+      { start: [4,2], target: [0,2], obs: [[2,2]], winCmds: ['KIRI','MAJU','KANAN','MAJU','MAJU','KANAN','MAJU'], label: "Batu memblokir jalan utama" },
+      { start: [2,1], target: [2,3], obs: [], winCmds: ['MAJU','MAJU'], label: "Jalan lurus tanpa rintangan" },
+      { start: [0,0], target: [2,2], obs: [[0,1],[1,0]], winCmds: ['KANAN','MAJU','MAJU','KIRI','MAJU','MAJU'], label: "Cari jalan terbuka di sudut" },
+      { start: [4,4], target: [2,4], obs: [[3,4]], winCmds: ['KIRI','MAJU','KANAN','MAJU','MAJU','KANAN','MAJU'], label: "Putar arah melewati rintangan" },
+      { start: [1,1], target: [1,3], obs: [[1,2]], winCmds: ['MAJU','KANAN','MAJU','KIRI','MAJU'], label: "Dua langkah mudah" },
+      { start: [3,0], target: [3,4], obs: [[3,2]], winCmds: ['KIRI','MAJU','KANAN','MAJU','MAJU','KANAN','MAJU'], label: "Hindari rintangan di tengah" },
+      { start: [0,4], target: [4,4], obs: [[2,4]], winCmds: ['KANAN','MAJU','KIRI','MAJU','MAJU','KIRI','MAJU'], label: "Tembus sampai ke garis akhir" }
+    ];
+
+    // DATA SOAL LOGIKA (10 SOAL - 5 Poin/soal -> Max 50)
+    const scratchQuestions = [
+      {
+        blocks: [
+          { type: 'event', text: 'when green flag clicked (Scratch)' },
+          { type: 'action', text: 'set [Skor] to 0' },
+          { type: 'control', text: 'repeat (5)' },
+          { type: 'action', text: 'change [Skor] by 10', indent: true },
+          { type: 'control', text: 'wait (2) seconds', indent: true },
+          { type: 'event', text: 'broadcast [Selesai]' }
+        ],
+        question: "Berapa nilai akhir pada variabel [Skor] setelah pesan [Selesai] disiarkan?",
+        options: ["10", "25", "50", "100"],
+        correct: 2,
+        explanation: "Perulangan repeat (5) menambah Skor sebesar 10 sebanyak 5 kali (5 x 10 = 50)."
+      },
+      {
+        blocks: [
+          { type: 'event', text: 'when I receive [Selesai]' },
+          { type: 'action', text: 'show sprite' },
+          { type: 'control', text: 'wait (10) seconds' },
+          { type: 'action', text: 'hide sprite' }
+        ],
+        question: "Berapa lama karakter akan terlihat di layar sebelum tersembunyi?",
+        options: ["2 detik", "5 detik", "10 detik", "15 detik"],
+        correct: 2,
+        explanation: "Ada blok 'wait (10) seconds' tepat setelah perintah 'show sprite'."
+      },
+      {
+        blocks: [
+          { type: 'event', text: 'when button clicked (Blockly)' },
+          { type: 'control', text: 'if [Skor > 40] do' },
+          { type: 'action', text: 'say [Lulus!] for 3 seconds', indent: true },
+          { type: 'control', text: 'else' },
+          { type: 'action', text: 'say [Coba Lagi!]', indent: true }
+        ],
+        question: "Jika variabel Skor bernilai 50, apa yang akan dikatakan karakter?",
+        options: ["Coba Lagi!", "Lulus!", "Diam tidak berbicara", "Terjadi Error"],
+        correct: 1,
+        explanation: "Karena 50 > 40 bernilai Benar (True), maka blok kondisi if pertama dieksekusi yaitu mengatakan 'Lulus!'."
+      },
+      {
+        blocks: [
+          { type: 'event', text: 'when actor clicked (Tynker)' },
+          { type: 'action', text: 'set speed to 10' },
+          { type: 'control', text: 'repeat until [touching wall]' },
+          { type: 'action', text: 'move 5 steps', indent: true }
+        ],
+        question: "Kapan karakter (actor) akan berhenti bergerak maju?",
+        options: ["Setelah 5 langkah", "Saat menyentuh dinding (wall)", "Setelah 10 detik", "Tidak pernah berhenti"],
+        correct: 1,
+        explanation: "Blok 'repeat until [touching wall]' akan terus mengulang gerakan sampai kondisi menyentuh dinding terpenuhi."
+      },
+      {
+        blocks: [
+          { type: 'event', text: 'when start button clicked (Tynker)' },
+          { type: 'action', text: 'set timer to 60 seconds' },
+          { type: 'control', text: 'wait 60 seconds' },
+          { type: 'action', text: 'display [Time is up!]' },
+          { type: 'action', text: 'change sprite to [study]' }
+        ],
+        question: "Pesan apa yang akan muncul di layar setelah 60 detik berlalu?",
+        options: ["Study complete", "Time is up!", "Start learning", "Wait 60 seconds"],
+        correct: 1,
+        explanation: "Setelah wait 60 seconds, perintah berikutnya adalah 'display [Time is up!]'."
+      },
+      {
+        blocks: [
+          { type: 'event', text: 'when study complete sprite clicked' },
+          { type: 'action', text: 'set timer to 30 seconds' },
+          { type: 'control', text: 'wait 30 seconds' },
+          { type: 'action', text: 'display [Time to play!]' }
+        ],
+        question: "Berapa durasi jeda waktu yang diatur sebelum menampilkan pesan waktu bermain?",
+        options: ["10 detik", "30 detik", "60 detik", "90 detik"],
+        correct: 1,
+        explanation: "Perintah 'wait 30 seconds' menahan waktu selama 30 detik sebelum pesan muncul."
+      },
+      {
+        blocks: [
+          { type: 'event', text: 'when green flag clicked' },
+          { type: 'action', text: 'go to x: 0 y: 0' },
+          { type: 'control', text: 'repeat (4)' },
+          { type: 'action', text: 'move 100 steps', indent: true },
+          { type: 'action', text: 'turn right 90 degrees', indent: true }
+        ],
+        question: "Bentuk bangun datar apa yang digambar oleh pergerakan sprite di atas?",
+        options: ["Segitiga", "Persegi (Bujur Sangkar)", "Lingkaran", "Garis Lurus"],
+        correct: 1,
+        explanation: "Bergerak lurus dengan sudut 90 derajat diulang sebanyak 4 kali akan membentuk bangun Persegi."
+      },
+      {
+        blocks: [
+          { type: 'event', text: 'when I receive [start_game]' },
+          { type: 'action', text: 'set [Nyawa] to 3' },
+          { type: 'control', text: 'forever' },
+          { type: 'control', text: 'if [touching enemy] then', indent: true },
+          { type: 'action', text: 'change [Nyawa] by -1', indent: true }
+        ],
+        question: "Apa yang terjadi pada variabel [Nyawa] setiap kali sprite menyentuh musuh?",
+        options: ["Bertambah 3", "Berkurang 1", "Menjadi 0", "Tetap 3"],
+        correct: 1,
+        explanation: "Perintah 'change [Nyawa] by -1' artinya mengurangi nilai variabel Nyawa sebanyak 1 poin."
+      },
+      {
+        blocks: [
+          { type: 'event', text: 'when [Space] key pressed' },
+          { type: 'action', text: 'play sound [Jump]' },
+          { type: 'action', text: 'change y by 50' },
+          { type: 'control', text: 'wait 0.5 seconds' },
+          { type: 'action', text: 'change y by -50' }
+        ],
+        question: "Gerakan apa yang dimanipulasi oleh susunan kode di atas saat spasi ditekan?",
+        options: ["Berjalan ke depan", "Melompat ke atas dan turun kembali", "Berputar 360 derajat", "Menghilang dari layar"],
+        correct: 1,
+        explanation: "Koordinat Y bertambah (+50 / naik), lalu menunggu sebentar dan berkurang (-50 / turun), menciptakan gerakan lompatan."
+      },
+      {
+        blocks: [
+          { type: 'event', text: 'when green flag clicked' },
+          { type: 'action', text: 'set [A] to 15' },
+          { type: 'action', text: 'set [B] to 10' },
+          { type: 'action', text: 'set [Hasil] to (A + B)' }
+        ],
+        question: "Berapa nilai dari variabel [Hasil] setelah kode dijalankan?",
+        options: ["10", "15", "25", "150"],
+        correct: 2,
+        explanation: "Variabel Hasil menyimpan penjumlahan A dan B yaitu 15 + 10 = 25."
+      }
+    ];
+
+    let currentRobotCommands = [];
+
+    // ==========================================
+    // INIT & LOGIK DROPDOWN PESERTA (1 ATAU 2)
+    // ==========================================
+    window.onload = () => {
+      fetchSiswaList();
+      setupAntiCheat();
+    };
+
+    async function fetchSiswaList() {
+      try {
+        const res = await fetch(`${GAS_WEB_APP_URL}?action=getSiswa`);
+        const result = await res.json();
+        if (result.status === "success") {
+          siswaData = result.data;
+        }
+      } catch (err) {
+        // Fallback demo data menyesuaikan struktur baru (No, Nama, Panggilan, Kelas)
+        siswaData = [
+          { no: 1, nama: "Ahmad Pratama", panggilan: "Ahmad", kelas: "X-A" },
+          { no: 2, nama: "Budi Santoso", panggilan: "Budi", kelas: "X-A" },
+          { no: 3, nama: "Citra Lestari", panggilan: "Citra", kelas: "X-A" },
+          { no: 4, nama: "Dewi Anggraeni", panggilan: "Dewi", kelas: "X-B" },
+          { no: 5, nama: "Eko Prasetyo", panggilan: "Eko", kelas: "X-B" },
+          { no: 6, nama: "Fatimah Zahra", panggilan: "Fatimah", kelas: "X-B" }
+        ];
+      }
+    }
+
+    function filterSiswa() {
+      currentKelas = document.getElementById("selectKelas").value;
+      const searchNama1 = document.getElementById("searchNama1");
+      const searchNama2 = document.getElementById("searchNama2");
+      searchNama1.value = "";
+      searchNama2.value = "";
+      
+      if (!currentKelas) {
+        searchNama1.disabled = true;
+        searchNama2.disabled = true;
+        searchNama1.placeholder = "Pilih kelas terlebih dahulu...";
+      } else {
+        searchNama1.disabled = false;
+        searchNama2.disabled = false;
+        searchNama1.placeholder = "Cari & pilih nama kamu...";
+        searchNama2.placeholder = "Cari & pilih nama pasangan...";
+      }
+    }
+
+    function togglePartner(show) {
+      isPartnerMode = show;
+      const partnerContainer = document.getElementById("partnerContainer");
+      const btnContainer = document.getElementById("togglePartnerContainer");
+      if (show) {
+        partnerContainer.classList.remove("hidden");
+        btnContainer.classList.add("hidden");
+      } else {
+        partnerContainer.classList.add("hidden");
+        btnContainer.classList.remove("hidden");
+        document.getElementById("searchNama2").value = "";
+      }
+    }
+
+    function showDropdown(num) {
+      const input = document.getElementById(`searchNama${num}`);
+      const listDiv = document.getElementById(`dropdownList${num}`);
+      const query = input.value.toLowerCase();
+      listDiv.innerHTML = "";
+
+      const otherName = num === 1 
+        ? document.getElementById("searchNama2").value.trim() 
+        : document.getElementById("searchNama1").value.trim();
+
+      const filtered = siswaData.filter(s => 
+        s.kelas === currentKelas &&
+        s.nama.toLowerCase().includes(query) &&
+        s.nama !== otherName
+      );
+
+      if (filtered.length === 0) {
+        listDiv.innerHTML = '<div class="p-3 text-xs text-slate-400">Nama tidak ditemukan / sudah terpilih</div>';
+      } else {
+        filtered.forEach(s => {
+          const item = document.createElement("div");
+          item.className = "p-3 text-sm hover:bg-emerald-50 cursor-pointer font-medium text-slate-700";
+          
+          // Menampilkan format: Nama Lengkap (Nama Panggilan) di dropdown
+          const namaPanggilan = s.panggilan ? ` (${s.panggilan})` : '';
+          item.textContent = `${s.nama}${namaPanggilan}`;
+          
+          item.onclick = () => {
+            input.value = s.nama; // Yang diisi ke input box hanya Nama Lengkap
+            listDiv.classList.add("hidden");
+          };
+          listDiv.appendChild(item);
+        });
+      }
+      listDiv.classList.remove("hidden");
+    }
+
+    // Menutup dropdown saat klik di luar
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#searchNama1") && !e.target.closest("#dropdownList1")) {
+        document.getElementById("dropdownList1").classList.add("hidden");
+      }
+      if (!e.target.closest("#searchNama2") && !e.target.closest("#dropdownList2")) {
+        document.getElementById("dropdownList2").classList.add("hidden");
+      }
+    });
+
+    // ==========================================
+    // SISTEM ANTI-CHEAT (FULLSCREEN & TAB)
+    // ==========================================
+    let isExamRunning = false;
+    function setupAntiCheat() {
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && isExamRunning) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Peringatan Anti-Curang!',
+            text: 'Anda berpindah tab! Soal saat ini dilewati otomatis.',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          skipCurrentQuestion("Gagal: Berpindah Tab/Keluar Layar");
+        }
+      });
+    }
+
+    function startFullscreen() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) elem.requestFullscreen();
+    }
+
+    // ==========================================
+    // MEMULAI UJIAN GABUNGAN
+    // ==========================================
+    let selectedNames = [];
+    function startExam() {
+      if (!currentKelas) {
+        Swal.fire("Peringatan", "Harap pilih Kelas terlebih dahulu!", "warning");
+        return;
+      }
+
+      const nama1 = document.getElementById("searchNama1").value.trim();
+      const nama2 = document.getElementById("searchNama2").value.trim();
+
+      if (!nama1) {
+        Swal.fire("Peringatan", "Harap pilih Nama Peserta 1 terlebih dahulu!", "warning");
+        return;
+      }
+
+      selectedNames = [nama1];
+      if (isPartnerMode && nama2) {
+        if (nama1 === nama2) {
+          Swal.fire("Peringatan", "Nama Peserta 1 dan 2 tidak boleh sama!", "warning");
+          return;
+        }
+        selectedNames.push(nama2);
+      } else if (isPartnerMode && !nama2) {
+        Swal.fire("Peringatan", "Harap lengkapi Nama Peserta 2 atau klik 'Batal Berpasangan'!", "warning");
+        return;
+      }
+
+      currentStage = 1;
+      currentQuestionIndex = 0;
+      scoreRobot = 0;
+      scoreLogika = 0;
+      userReviewLog = [];
+      isExamRunning = true;
+      startFullscreen();
+
+      // Setup Header Display
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("gameHeader").classList.remove("hidden");
+      document.getElementById("gameHeader").classList.add("flex");
+      
+      const teamLabel = selectedNames.join(" & ");
+      document.getElementById("hdrNamaDisplay").textContent = `${teamLabel} (${currentKelas})`;
+      document.getElementById("hdrSkor").textContent = "0";
+
+      document.getElementById("gameRobotScreen").classList.remove("hidden");
+      loadRobotLevel();
+    }
+
+    // ==========================================
+    // TIMER ENGINE (20 DETIK)
+    // ==========================================
+    function resetTimer(onTimeoutCallback) {
+      clearInterval(timerInterval);
+      timeLeft = 20;
+      document.getElementById("hdrTimer").textContent = timeLeft;
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("hdrTimer").textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          onTimeoutCallback();
+        }
+      }, 1000);
+    }
+
+    function skipCurrentQuestion(reason = "Waktu Habis (20s)") {
+      if (!isExamRunning) return;
+      if (currentStage === 1) {
+        userReviewLog.push({
+          no: currentQuestionIndex + 1,
+          ind: "1. Robot",
+          status: false,
+          jawabanSiswa: "Melewatkan Soal / Waktu Habis",
+          jawabanBenar: robotLevels[currentQuestionIndex].winCmds.join(" ➔ "),
+          pembahasan: reason
+        });
+        nextQuestion();
+      } else {
+        const q = scratchQuestions[currentQuestionIndex];
+        userReviewLog.push({
+          no: currentQuestionIndex + 1,
+          ind: "2. Logika",
+          status: false,
+          jawabanSiswa: "Melewatkan Soal / Waktu Habis",
+          jawabanBenar: q.options[q.correct],
+          pembahasan: q.explanation
+        });
+        nextQuestion();
+      }
+    }
+
+    // ==========================================
+    // TAHAP 1: NAVIGASI ROBOT (10 SOAL)
+    // ==========================================
+    function loadRobotLevel() {
+      const level = robotLevels[currentQuestionIndex];
+      document.getElementById("robotTitle").textContent = `Soal ${currentQuestionIndex + 1} dari 10`;
+      document.getElementById("robotInstruction").textContent = level.label;
+      currentRobotCommands = [];
+      renderCommandQueue();
+
+      const board = document.getElementById("gridBoard");
+      board.innerHTML = "";
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          const cell = document.createElement("div");
+          cell.className = "grid-cell";
+          if (r === level.start[0] && c === level.start[1]) cell.innerHTML = "🤖";
+          else if (r === level.target[0] && c === level.target[1]) cell.innerHTML = "🏁";
+          else if (level.obs.some(o => o[0] === r && o[1] === c)) cell.innerHTML = "🪨";
+          board.appendChild(cell);
+        }
+      }
+      resetTimer(() => skipCurrentQuestion());
+    }
+
+    function addCmd(cmd) {
+      currentRobotCommands.push(cmd);
+      renderCommandQueue();
+    }
+    function clearCmd() {
+      currentRobotCommands = [];
+      renderCommandQueue();
+    }
+    function renderCommandQueue() {
+      const container = document.getElementById("cmdQueue");
+      container.innerHTML = "";
+      currentRobotCommands.forEach(c => {
+        const span = document.createElement("span");
+        span.className = "bg-emerald-600 px-2 py-1 rounded text-white font-semibold";
+        span.textContent = c;
+        container.appendChild(span);
+      });
+    }
+
+    function submitRobot() {
+      clearInterval(timerInterval);
+      const level = robotLevels[currentQuestionIndex];
+      const isCorrect = JSON.stringify(currentRobotCommands) === JSON.stringify(level.winCmds);
+
+      if (isCorrect) {
+        scoreRobot += 5; // 10 soal x 5 = max 50
+        document.getElementById("hdrSkor").textContent = scoreRobot + scoreLogika;
+        userReviewLog.push({
+          no: currentQuestionIndex + 1,
+          ind: "1. Robot",
+          status: true,
+          jawabanSiswa: currentRobotCommands.join(" ➔ "),
+          jawabanBenar: level.winCmds.join(" ➔ "),
+          pembahasan: "Tepat! Robot menempuh jalur secara efisien tanpa menabrak rintangan."
+        });
+      } else {
+        userReviewLog.push({
+          no: currentQuestionIndex + 1,
+          ind: "1. Robot",
+          status: false,
+          jawabanSiswa: currentRobotCommands.join(" ➔ ") || "Kosong",
+          jawabanBenar: level.winCmds.join(" ➔ "),
+          pembahasan: "Rangkaian langkah kurang tepat atau menabrak penghalang batu."
+        });
+      }
+      nextQuestion();
+    }
+
+    // ==========================================
+    // TAHAP 2: ANALISA LOGIKA SCRATCH/BLOCKLY (10 SOAL)
+    // ==========================================
+    function loadScratchQuestion() {
+      const q = scratchQuestions[currentQuestionIndex];
+      document.getElementById("scratchTitle").textContent = `Soal ${currentQuestionIndex + 1} dari 10`;
+      document.getElementById("scratchQuestion").textContent = q.question;
+
+      const blockContainer = document.getElementById("scratchBlockContainer");
+      blockContainer.innerHTML = "";
+      q.blocks.forEach(b => {
+        const div = document.createElement("div");
+        div.className = `scratch-block block-${b.type} ${b.indent ? 'block-indent' : ''}`;
+        div.textContent = b.text;
+        blockContainer.appendChild(div);
+      });
+
+      const optsContainer = document.getElementById("scratchOptions");
+      optsContainer.innerHTML = "";
+      q.options.forEach((opt, index) => {
+        const btn = document.createElement("button");
+        btn.className = "w-full text-left bg-slate-50 hover:bg-emerald-50 border border-slate-300 px-4 py-3 rounded-xl font-semibold text-sm transition text-slate-700";
+        btn.textContent = `${String.fromCharCode(65 + index)}. ${opt}`;
+        btn.onclick = () => submitScratch(index);
+        optsContainer.appendChild(btn);
+      });
+
+      resetTimer(() => skipCurrentQuestion());
+    }
+
+    function submitScratch(selectedIndex) {
+      clearInterval(timerInterval);
+      const q = scratchQuestions[currentQuestionIndex];
+      const isCorrect = selectedIndex === q.correct;
+
+      if (isCorrect) {
+        scoreLogika += 5; // 10 soal x 5 = max 50
+        document.getElementById("hdrSkor").textContent = scoreRobot + scoreLogika;
+        userReviewLog.push({
+          no: currentQuestionIndex + 1,
+          ind: "2. Logika",
+          status: true,
+          jawabanSiswa: q.options[selectedIndex],
+          jawabanBenar: q.options[q.correct],
+          pembahasan: q.explanation
+        });
+      } else {
+        userReviewLog.push({
+          no: currentQuestionIndex + 1,
+          ind: "2. Logika",
+          status: false,
+          jawabanSiswa: q.options[selectedIndex],
+          jawabanBenar: q.options[q.correct],
+          pembahasan: q.explanation
+        });
+      }
+      nextQuestion();
+    }
+
+    // ==========================================
+    // TRANSISI TAHAP & FINISH UJIAN
+    // ==========================================
+    function nextQuestion() {
+      currentQuestionIndex++;
+
+      if (currentStage === 1 && currentQuestionIndex < 10) {
+        loadRobotLevel();
+      } else if (currentStage === 1 && currentQuestionIndex >= 10) {
+        // Transisi ke Tahap 2 Logika
+        currentStage = 2;
+        currentQuestionIndex = 0;
+        document.getElementById("gameRobotScreen").classList.add("hidden");
+        document.getElementById("gameScratchScreen").classList.remove("hidden");
+        Swal.fire({
+          icon: 'info',
+          title: 'Bagian 1 Selesai!',
+          text: 'Lanjut ke Bagian 2: Analisa Logika Blockly & Tynker (10 Soal).',
+          timer: 2500,
+          showConfirmButton: false
+        });
+        loadScratchQuestion();
+      } else if (currentStage === 2 && currentQuestionIndex < 10) {
+        loadScratchQuestion();
+      } else {
+        finishExam();
+      }
+    }
+
+    async function finishExam() {
+      isExamRunning = false;
+      clearInterval(timerInterval);
+      const totalScore = scoreRobot + scoreLogika; // 0 - 100
+
+      // Kirim Data ke Google Apps Script
+      try {
+        await fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            nama: selectedNames,
+            kelas: currentKelas,
+            skorRobot: scoreRobot,
+            skorLogika: scoreLogika,
+            skorTotal: totalScore
+          })
+        });
+      } catch (err) {
+        console.log("Offline demo mode / error:", err);
+      }
+
+      // Tampilkan screen hasil
+      document.getElementById("gameRobotScreen").classList.add("hidden");
+      document.getElementById("gameScratchScreen").classList.add("hidden");
+      document.getElementById("gameHeader").classList.add("hidden");
+      document.getElementById("resultScreen").classList.remove("hidden");
+
+      document.getElementById("scoreRobotDisplay").textContent = scoreRobot;
+      document.getElementById("scoreLogikaDisplay").textContent = scoreLogika;
+      document.getElementById("finalScoreDisplay").textContent = totalScore;
+
+      // Render Pembahasan
+      const reviewContainer = document.getElementById("reviewList");
+      reviewContainer.innerHTML = "";
+      userReviewLog.forEach(log => {
+        const item = document.createElement("div");
+        item.className = "bg-slate-50 border border-slate-200 p-4 rounded-xl text-xs space-y-1.5";
+        item.innerHTML = `
+          <div class="flex justify-between items-center font-bold">
+            <span class="text-slate-700">Soal #${log.no} (${log.ind})</span>
+            <span class="${log.status ? 'text-emerald-600' : 'text-rose-600'}">
+              <i class="fa-solid ${log.status ? 'fa-check-circle' : 'fa-times-circle'} mr-1"></i>
+              ${log.status ? 'Benar' : 'Salah'}
+            </span>
+          </div>
+          <div><strong class="text-slate-500">Jawaban Anda:</strong> <span class="text-slate-800">${log.jawabanSiswa}</span></div>
+          <div><strong class="text-slate-500">Jawaban Benar:</strong> <span class="text-emerald-700 font-semibold">${log.jawabanBenar}</span></div>
+          <div class="bg-white p-2.5 rounded-lg border border-slate-200 text-slate-600">
+            <strong class="text-emerald-700">Pembahasan:</strong> ${log.pembahasan}
+          </div>
+        `;
+        reviewContainer.appendChild(item);
+      });
+    }
+
+    // ==========================================
+    // SISTEM ADMIN DASHBOARD
+    // ==========================================
+    function showAdminModal() {
+      document.getElementById("adminModal").classList.remove("hidden");
+    }
+    function hideAdminModal() {
+      document.getElementById("adminModal").classList.add("hidden");
+    }
+    function verifyAdmin() {
+      const pass = document.getElementById("adminPassInput").value;
+      if (pass === "admin123") {
+        hideAdminModal();
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("adminScreen").classList.remove("hidden");
+        fetchAdminData();
+      } else {
+        Swal.fire("Gagal", "Password Admin Salah!", "error");
+      }
+    }
+
+    async function fetchAdminData() {
+      let data = [];
+      try {
+        const res = await fetch(`${GAS_WEB_APP_URL}?action=getAdminData`);
+        const result = await res.json();
+        if (result.status === "success") data = result.data;
+      } catch (err) {
+        data = [
+          { timestamp: "31/07/2026, 08:10", nama: "Ahmad Pratama", kelas: "X-A", skorRobot: 45, skorLogika: 40, skorTotal: 85 },
+          { timestamp: "31/07/2026, 08:10", nama: "Budi Santoso", kelas: "X-A", skorRobot: 45, skorLogika: 40, skorTotal: 85 },
+          { timestamp: "31/07/2026, 08:15", nama: "Citra Lestari", kelas: "X-B", skorRobot: 50, skorLogika: 45, skorTotal: 95 },
+          { timestamp: "31/07/2026, 08:18", nama: "Dewi Anggraeni", kelas: "X-B", skorRobot: 35, skorLogika: 40, skorTotal: 75 }
+        ];
+      }
+
+      // Sort nilai tertinggi
+      data.sort((a,b) => b.skorTotal - a.skorTotal);
+
+      // 1. Render Podium Top 3
+      renderPodium(data.slice(0, 3));
+
+      // 2. Render Chart.js
+      renderChart(data);
+
+      // 3. Render Tabel (satu baris per siswa ke bawah)
+      const tbody = document.getElementById("adminTableBody");
+      tbody.innerHTML = "";
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="p-3 text-slate-500">${row.timestamp}</td>
+          <td class="p-3 font-semibold text-slate-800">${row.nama}</td>
+          <td class="p-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-xs font-bold">${row.kelas}</span></td>
+          <td class="p-3 font-medium text-slate-700">${row.skorRobot}</td>
+          <td class="p-3 font-medium text-slate-700">${row.skorLogika}</td>
+          <td class="p-3 font-extrabold text-emerald-700">${row.skorTotal}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderPodium(top3) {
+      const container = document.getElementById("podiumContainer");
+      container.innerHTML = "";
+      const styles = [
+        { rank: 1, height: "h-36", color: "from-amber-400 to-amber-500", border: "border-amber-500", title: "🥇 Juara 1" },
+        { rank: 2, height: "h-28", color: "from-slate-300 to-slate-400", border: "border-slate-400", title: "🥈 Juara 2" },
+        { rank: 3, height: "h-24", color: "from-amber-600 to-amber-700", border: "border-amber-700", title: "🥉 Juara 3" }
+      ];
+
+      const displayOrder = [1, 0, 2];
+      displayOrder.forEach(idx => {
+        const student = top3[idx] || { nama: "-", skorTotal: 0, kelas: "-" };
+        const st = styles[idx];
+        const card = document.createElement("div");
+        card.className = "flex flex-col items-center text-center";
+        card.innerHTML = `
+          <div class="text-xs font-bold text-slate-800 mb-1 truncate max-w-[100px]">${student.nama}</div>
+          <div class="text-[10px] text-slate-500 mb-2">${student.kelas}</div>
+          <div class="w-full ${st.height} bg-gradient-to-t ${st.color} border-t-4 ${st.border} rounded-t-xl flex flex-col justify-center items-center p-2 shadow-lg">
+            <span class="text-xs font-bold text-white uppercase">${st.title}</span>
+            <span class="text-lg font-black text-white mt-1">${student.skorTotal} Poin</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderChart(data) {
+      const ctx = document.getElementById("scoreChart").getContext("2d");
+      const labels = data.map(d => d.nama);
+      const scores = data.map(d => d.skorTotal);
+
+      if (scoreChartInstance) scoreChartInstance.destroy();
+      scoreChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total Skor (100)',
+            data: scores,
+            backgroundColor: '#059669',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100, ticks: { color: '#64748b' } },
+            x: { ticks: { color: '#64748b' } }
+          },
+          plugins: {
+            legend: { labels: { color: '#334155' } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
