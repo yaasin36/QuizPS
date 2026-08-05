@@ -66,10 +66,7 @@
       transition: all 0.25s ease;
     }
     .robot-sprite { transform: scale(1.1); transition: transform 0.2s; }
-    .robot-dir-0 { transform: rotate(-90deg) scale(1.1); } /* Atas */
-    .robot-dir-1 { transform: rotate(0deg) scale(1.1); }   /* Kanan */
-    .robot-dir-2 { transform: rotate(90deg) scale(1.1); }  /* Bawah */
-    .robot-dir-3 { transform: rotate(180deg) scale(1.1); } /* Kiri */
+    /* Rotasi tidak digunakan karena kontrol absolut (Atas, Bawah, Kiri, Kanan) */
 
     /* Custom Glassmorphism Panels */
     .glass-card {
@@ -146,14 +143,13 @@
 
       <!-- Loading Indicator Fetch Nama -->
       <div id="loadingSiswaStatus" class="hidden text-xs text-center text-emerald-600 font-semibold mb-3">
-        <i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Sedang memuat daftar siswa...
+        <i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Sedang memuat data siswa...
       </div>
 
       <div class="space-y-4">
         <!-- Select Kelas (Hanya X-A dan X-B) -->
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-emerald-900 mb-1.5">1. Pilih Kelas</label>
-          <!-- Tambahkan onchange untuk mereset input jika kelas berubah -->
           <select id="selectKelas" onchange="resetInputs()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none text-slate-800 font-semibold">
             <option value="">-- Pilih Kelas --</option>
             <option value="X-A">Kelas X-A</option>
@@ -165,7 +161,6 @@
         <div class="relative">
           <label class="block text-xs font-bold uppercase tracking-wider text-emerald-900 mb-1.5">2. Nama Peserta 1</label>
           <input type="text" id="inputNama1" oninput="showSuggestions('inputNama1', 'sugNama1')" autocomplete="off" placeholder="Pilih kelas lalu ketik namamu..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-slate-800">
-          <!-- Dropdown Suggestion -->
           <ul id="sugNama1" class="absolute w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto hidden custom-scrollbar"></ul>
         </div>
 
@@ -185,7 +180,6 @@
             </button>
           </div>
           <input type="text" id="inputNama2" oninput="showSuggestions('inputNama2', 'sugNama2')" autocomplete="off" placeholder="Pilih kelas lalu ketik nama pasanganmu..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-slate-800">
-           <!-- Dropdown Suggestion -->
            <ul id="sugNama2" class="absolute w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto hidden custom-scrollbar"></ul>
         </div>
 
@@ -194,7 +188,7 @@
           <div class="font-bold flex items-center text-amber-800">
             <i class="fa-solid fa-circle-info mr-1.5"></i> Aturan Penilaian & Waktu:
           </div>
-          <p>&bull; <strong>10 Soal Robot:</strong> 0-5 Poin berdasarkan <strong>efisiensi langkah</strong>.</p>
+          <p>&bull; <strong>10 Soal Robot:</strong> 0-5 Poin. Bisa pakai berapapun langkah/rute bebas, <strong>langkah paling efisien/pendek = nilai tertinggi</strong>.</p>
           <p>&bull; <strong>10 Soal Logika:</strong> 5 Poin/soal jika benar persis.</p>
           <p>&bull; Waktu <strong>20 detik/soal</strong>. Dilarang berpindah Tab/Layar.</p>
         </div>
@@ -220,7 +214,7 @@
           <h3 id="robotTitle" class="text-xl font-black text-slate-800 mt-1">Soal 1 dari 10</h3>
         </div>
         <div class="text-xs bg-slate-100 text-slate-700 font-bold px-3 py-1.5 rounded-lg border border-slate-200 flex items-center" id="robotInstruction">
-          <i class="fa-solid fa-compass mr-1.5 text-emerald-600"></i> Orientasi Awal: Menghadap ke Kanan (Timur)
+          <i class="fa-solid fa-gamepad mr-1.5 text-emerald-600"></i> Kontrol Arah: Atas, Bawah, Kiri, Kanan
         </div>
       </div>
 
@@ -232,22 +226,25 @@
             Max: 5 Poin
           </div>
           <div id="gridBoard" class="grid grid-cols-5 gap-2"></div>
-          <p class="text-[11px] text-slate-400 mt-3 font-medium text-center leading-tight"><i class="fa-solid fa-info-circle mr-1"></i> Arahkan Robot (🤖) ke Target (🏁) tanpa menabrak Batu (🪨). Semakin efisien/ringkas, poin semakin tinggi.</p>
+          <p class="text-[11px] text-slate-400 mt-3 font-medium text-center leading-tight"><i class="fa-solid fa-info-circle mr-1"></i> Arahkan Robot (🤖) ke Target (🏁) secara absolut. Lintasan apapun sah asal tidak menabrak batu.</p>
         </div>
 
         <!-- Controls -->
         <div class="space-y-4">
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
             <label class="block text-xs font-extrabold text-slate-600 mb-2.5 uppercase tracking-wider">Kontrol Langkah Robot:</label>
-            <div class="grid grid-cols-3 gap-2">
-              <button onclick="addCmd('MAJU')" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white px-1 py-2.5 rounded-xl text-xs font-bold shadow transition flex items-center justify-center">
-                <i class="fa-solid fa-arrow-up mr-1"></i> Maju
+            <div class="grid grid-cols-4 gap-2">
+              <button onclick="addCmd('ATAS')" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white px-1 py-2.5 rounded-xl text-xs font-bold shadow transition flex items-center justify-center">
+                <i class="fa-solid fa-arrow-up mr-1"></i> Atas
               </button>
-              <button onclick="addCmd('KIRI')" class="bg-blue-600 hover:bg-blue-500 active:scale-95 text-white px-1 py-2.5 rounded-xl text-xs font-bold shadow transition flex items-center justify-center">
-                <i class="fa-solid fa-rotate-left mr-1"></i> Kiri
+              <button onclick="addCmd('BAWAH')" class="bg-blue-600 hover:bg-blue-500 active:scale-95 text-white px-1 py-2.5 rounded-xl text-xs font-bold shadow transition flex items-center justify-center">
+                <i class="fa-solid fa-arrow-down mr-1"></i> Bawah
               </button>
-              <button onclick="addCmd('KANAN')" class="bg-amber-600 hover:bg-amber-500 active:scale-95 text-white px-1 py-2.5 rounded-xl text-xs font-bold shadow transition flex items-center justify-center">
-                <i class="fa-solid fa-rotate-right mr-1"></i> Kanan
+              <button onclick="addCmd('KIRI')" class="bg-amber-600 hover:bg-amber-500 active:scale-95 text-white px-1 py-2.5 rounded-xl text-xs font-bold shadow transition flex items-center justify-center">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Kiri
+              </button>
+              <button onclick="addCmd('KANAN')" class="bg-purple-600 hover:bg-purple-500 active:scale-95 text-white px-1 py-2.5 rounded-xl text-xs font-bold shadow transition flex items-center justify-center">
+                <i class="fa-solid fa-arrow-right mr-1"></i> Kanan
               </button>
             </div>
 
@@ -445,23 +442,20 @@
     let userReviewLog = [];
     let scoreChartInstance = null;
     let rawAdminData = [];
-    
-    // Database Nama Siswa untuk Autocomplete
     let masterDataSiswa = [];
 
-    // DATA ROBOT: (Koordinat Grid 0-4) 
-    // Aturan: Robot mulai menghadap ke KANAN (Timur).
+    // DATA ROBOT: (Kontrol Absolut: ATAS, BAWAH, KIRI, KANAN)
     const robotLevels = [
-      { start: [2,0], target: [2,4], obs: [[2,2]], winCmds: ['MAJU','KIRI','MAJU','KANAN','MAJU','MAJU','KANAN','MAJU','KIRI','MAJU'], label: "Soal 1: Lewati batu tengah menuju seberang" },
-      { start: [4,0], target: [0,0], obs: [[2,0]], winCmds: ['KIRI','MAJU','MAJU','KANAN','MAJU','KIRI','MAJU','MAJU','KIRI','MAJU'], label: "Soal 2: Susuri tepi atas menghindari dasar" },
-      { start: [0,0], target: [0,4], obs: [[0,2]], winCmds: ['KANAN','MAJU','KIRI','MAJU','MAJU','MAJU','KIRI','MAJU','KANAN','MAJU'], label: "Soal 3: Manuver menghindari batu di jalur lurus" },
-      { start: [4,2], target: [0,2], obs: [[2,2]], winCmds: ['KIRI','MAJU','KIRI','MAJU','KANAN','MAJU','MAJU','KANAN','MAJU','KIRI','MAJU'], label: "Soal 4: Tembus celah sempit di tengah" },
-      { start: [2,1], target: [2,3], obs: [[2,2]], winCmds: ['KIRI','MAJU','KANAN','MAJU','MAJU','KANAN','MAJU'], label: "Soal 5: Memutar jarak pendek di pusat grid" },
-      { start: [0,0], target: [2,2], obs: [[0,1],[1,1]], winCmds: ['KANAN','MAJU','MAJU','KIRI','MAJU','MAJU'], label: "Soal 6: Keluar dari jebakan dinding siku" },
-      { start: [4,4], target: [2,4], obs: [[3,4]], winCmds: ['KIRI','KIRI','MAJU','KANAN','MAJU','MAJU','KANAN','MAJU'], label: "Soal 7: Putar balik mencari jalan pintas" },
-      { start: [1,1], target: [1,3], obs: [[1,2]], winCmds: ['KIRI','MAJU','KANAN','MAJU','MAJU','KANAN','MAJU'], label: "Soal 8: Navigasi menghindari batu rintangan pendek" },
-      { start: [3,0], target: [3,4], obs: [[3,2]], winCmds: ['MAJU','KIRI','MAJU','KANAN','MAJU','MAJU','KANAN','MAJU','KIRI','MAJU'], label: "Soal 9: Jalur memutar dari arah bawah" },
-      { start: [0,4], target: [4,4], obs: [[2,4]], winCmds: ['KANAN','MAJU','KANAN','MAJU','KIRI','MAJU','MAJU','KIRI','MAJU','KANAN','MAJU'], label: "Soal 10: Manuver mundur menuju target finish" }
+      { start: [2,0], target: [2,4], obs: [[2,2]], winCmds: ['KANAN','ATAS','KANAN','KANAN','BAWAH','KANAN'], label: "Soal 1: Lewati batu tengah menuju seberang" },
+      { start: [4,0], target: [0,0], obs: [[2,0]], winCmds: ['ATAS','ATAS','KANAN','ATAS','ATAS','KIRI'], label: "Soal 2: Susuri tepi atas menghindari dasar" },
+      { start: [0,0], target: [0,4], obs: [[0,2]], winCmds: ['KANAN','BAWAH','KANAN','KANAN','ATAS','KANAN'], label: "Soal 3: Manuver menghindari batu di jalur lurus" },
+      { start: [4,2], target: [0,2], obs: [[2,2]], winCmds: ['ATAS','KIRI','ATAS','ATAS','KANAN','ATAS'], label: "Soal 4: Tembus celah sempit di tengah" },
+      { start: [2,1], target: [2,3], obs: [[2,2]], winCmds: ['ATAS','KANAN','KANAN','BAWAH'], label: "Soal 5: Memutar jarak pendek di pusat grid" },
+      { start: [0,0], target: [2,2], obs: [[0,1],[1,1]], winCmds: ['BAWAH','BAWAH','KANAN','KANAN'], label: "Soal 6: Keluar dari jebakan dinding siku" },
+      { start: [4,4], target: [2,4], obs: [[3,4]], winCmds: ['KIRI','ATAS','ATAS','KANAN'], label: "Soal 7: Putar balik mencari jalan pintas" },
+      { start: [1,1], target: [1,3], obs: [[1,2]], winCmds: ['ATAS','KANAN','KANAN','BAWAH'], label: "Soal 8: Navigasi menghindari batu rintangan pendek" },
+      { start: [3,0], target: [3,4], obs: [[3,2]], winCmds: ['KANAN','ATAS','KANAN','KANAN','BAWAH','KANAN'], label: "Soal 9: Jalur memutar dari arah bawah" },
+      { start: [0,4], target: [4,4], obs: [[2,4]], winCmds: ['BAWAH','KIRI','BAWAH','BAWAH','KANAN','BAWAH'], label: "Soal 10: Manuver mundur menuju target finish" }
     ];
 
     // DATA LOGIKA SCRATCH
@@ -485,7 +479,6 @@
       fetchDataSiswa();
     };
 
-    // FUNGSI FETCH DATA SISWA UNTUK AUTOCOMPLETE
     async function fetchDataSiswa() {
       const loader = document.getElementById('loadingSiswaStatus');
       loader.classList.remove('hidden');
@@ -502,7 +495,6 @@
       }
     }
 
-    // Fungsi reset input jika kelas diganti
     function resetInputs() {
       document.getElementById('inputNama1').value = '';
       document.getElementById('inputNama2').value = '';
@@ -510,7 +502,6 @@
       document.getElementById('sugNama2').classList.add('hidden');
     }
 
-    // FUNGSI MENAMPILKAN SUGGESTION NAMA (Filter by Kelas)
     function showSuggestions(inputId, sugId) {
       const input = document.getElementById(inputId);
       const sugContainer = document.getElementById(sugId);
@@ -529,7 +520,6 @@
         return; 
       }
 
-      // Filter nama yang mengandung kata kunci DAN kelasnya sesuai pilihan dropdown
       const filtered = masterDataSiswa.filter(s => 
         s.nama.toLowerCase().includes(val) && s.kelas === selectedClass
       );
@@ -545,9 +535,8 @@
         li.className = "px-4 py-2.5 hover:bg-emerald-50 cursor-pointer text-sm border-b border-slate-100 last:border-0 flex justify-between items-center transition";
         li.innerHTML = `<span class="font-bold text-slate-700">${s.nama}</span> <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">${s.kelas}</span>`;
         
-        // Event click jika dipilih
         li.onmousedown = (e) => {
-          e.preventDefault(); // Mencegah input keburu blur
+          e.preventDefault(); 
           input.value = s.nama;
           sugContainer.classList.add('hidden');
         };
@@ -556,7 +545,6 @@
       sugContainer.classList.remove('hidden');
     }
 
-    // Menutup dropdown klik diluar
     document.addEventListener('click', (e) => {
       const sug1 = document.getElementById('sugNama1');
       const sug2 = document.getElementById('sugNama2');
@@ -615,7 +603,7 @@
     function setupAntiCheat() {
       document.addEventListener("visibilitychange", () => {
         if (document.hidden && isExamRunning) {
-          Swal.fire({ icon: 'warning', title: 'Peringatan!', text: 'Dilarang pindah layar. Soal ini dilewati (0 poin).', timer: 2000, showConfirmButton: false });
+          Swal.fire({ icon: 'warning', title: 'Peringatan!', text: 'Dilarang pindah layar. Soal ini dilewati otomatis (0 poin).', timer: 2000, showConfirmButton: false });
           skipCurrentQuestion("Gagal: Terdeteksi pindah tab/layar (Kecurangan).");
         }
       });
@@ -664,8 +652,7 @@
           cell.id = `cell-${r}-${c}`;
           
           if (r === level.start[0] && c === level.start[1]) {
-            // Arah 1 = Menghadap Kanan (Sesuai kesepakatan)
-            cell.innerHTML = `<span class="robot-sprite robot-dir-1" id="theRobot">🤖</span>`;
+            cell.innerHTML = `<span class="robot-sprite" id="theRobot">🤖</span>`;
           }
           else if (r === level.target[0] && c === level.target[1]) cell.innerHTML = "🏁";
           else if (level.obs.some(o => o[0] === r && o[1] === c)) cell.innerHTML = "🪨";
@@ -689,31 +676,29 @@
       });
     }
 
-    // Fungsi Simulator Pathing (Skor Dinamis 0, 2, 3, 4, 5)
+    // Fungsi Simulator Pathing (Skor Dinamis Berapapun Langkahnya)
     function simulateRobot(commands, level) {
       let r = level.start[0];
       let c = level.start[1];
-      let dir = 1; // 0:Atas, 1:Kanan, 2:Bawah, 3:Kiri
 
       for (let cmd of commands) {
-        if (cmd === 'KIRI') {
-          dir = (dir + 3) % 4; // Rotasi berlawanan jarum jam
+        if (cmd === 'ATAS') {
+          r--;
+        } else if (cmd === 'BAWAH') {
+          r++;
+        } else if (cmd === 'KIRI') {
+          c--;
         } else if (cmd === 'KANAN') {
-          dir = (dir + 1) % 4; // Rotasi searah jarum jam
-        } else if (cmd === 'MAJU') {
-          if (dir === 0) r--;
-          else if (dir === 1) c++;
-          else if (dir === 2) r++;
-          else if (dir === 3) c--;
+          c++;
+        }
 
-          // Deteksi Keluar Batas
-          if (r < 0 || r > 4 || c < 0 || c > 4) {
-            return { success: false, reason: 'Gagal! Robot keluar dari arena grid.' };
-          }
-          // Deteksi Nabrak Batu
-          if (level.obs.some(o => o[0] === r && o[1] === c)) {
-            return { success: false, reason: 'Gagal! Robot menabrak rintangan batu.' };
-          }
+        // Deteksi Keluar Batas Grid
+        if (r < 0 || r > 4 || c < 0 || c > 4) {
+          return { success: false, reason: 'Gagal! Robot menabrak tembok pinggir/keluar dari arena.' };
+        }
+        // Deteksi Nabrak Batu
+        if (level.obs.some(o => o[0] === r && o[1] === c)) {
+          return { success: false, reason: 'Gagal! Robot menabrak rintangan batu yang ada di tengah.' };
         }
       }
 
@@ -721,7 +706,7 @@
       if (r === level.target[0] && c === level.target[1]) {
         return { success: true };
       } else {
-        return { success: false, reason: 'Gagal! Kode selesai tapi robot belum mencapai target.' };
+        return { success: false, reason: 'Gagal! Robot sudah berhenti melangkah tapi belum sampai bendera target.' };
       }
     }
 
@@ -745,22 +730,28 @@
         let pmb = "";
         
         if (simResult.success) {
-          // Kalkulasi Poin Dinamis Efisiensi Jalur Siswa (Max 5, Min 2)
+          // Kalkulasi Poin Dinamis Efisiensi Jalur Siswa: (Cepat = Poin Tinggi, Lambat = Poin Kecil)
           if (userLength <= optimalLength) { 
-            points = 5; pmb = `Luar Biasa! Jalur efisien & ringkas (${userLength} langkah).`; 
+            points = 5; pmb = `Luar Biasa! Jalur paling efisien & ringkas (${userLength} langkah).`; 
           }
           else if (userLength <= optimalLength + 2) { 
-            points = 4; pmb = `Bagus! Namun ada sedikit putaran tambahan (${userLength} langkah). Kunci Optimal: ${optimalLength} langkah.`; 
+            points = 4; pmb = `Bagus! Sampai tujuan tapi ada sedikit putaran tambahan (${userLength} langkah). Kunci Paling Cepat: ${optimalLength} langkah.`; 
           }
           else if (userLength <= optimalLength + 4) { 
-            points = 3; pmb = `Berhasil! Jalur kurang efisien (${userLength} langkah). Kunci Optimal: ${optimalLength} langkah.`; 
+            points = 3; pmb = `Berhasil! Jalur kamu agak kurang efisien (${userLength} langkah). Kunci Paling Cepat: ${optimalLength} langkah.`; 
           }
           else { 
-            points = 2; pmb = `Berhasil! Jalur kamu sangat berputar-putar (${userLength} langkah). Kunci Optimal: ${optimalLength} langkah.`; 
+            points = 2; pmb = `Berhasil! Jalur kamu bisa mencapai target tapi sangat berputar-putar/boros (${userLength} langkah). Kunci Paling Cepat: ${optimalLength} langkah.`; 
           }
         } else {
-          points = 0;
-          pmb = `${simResult.reason} Kunci Optimal harusnya: ${optimalLength} langkah.`;
+          // Jika salah tapi berusaha mengisi balok (Langkah apapun diberi poin usaha)
+          if (userLength > 0) {
+            points = 1;
+            pmb = `${simResult.reason} (+1 Poin Usaha mencoba). Kunci Paling Cepat harusnya: ${optimalLength} langkah.`;
+          } else {
+            points = 0;
+            pmb = `Kosong, tidak ada pergerakan sama sekali. Kunci Paling Cepat harusnya: ${optimalLength} langkah.`;
+          }
         }
         
         scoreRobot += points;
@@ -768,14 +759,14 @@
         
         // Log Review untuk pembahasan
         userReviewLog.push({ 
-          no: currentQuestionIndex + 1, ind: "1. Robot", status: simResult.success, points: points,
-          jawabanSiswa: currentRobotCommands.join(" ➔ ") || "Kosong", jawabanBenar: level.winCmds.length + " Langkah (Optimal)", pembahasan: pmb 
+          no: currentQuestionIndex + 1, ind: "1. Robot", status: points >= 2 ? true : false, points: points,
+          jawabanSiswa: currentRobotCommands.join(" ➔ ") || "Kosong", jawabanBenar: optimalLength + " Langkah (Optimal)", pembahasan: pmb 
         });
         
         // Toast Notification Poin
         Swal.fire({ 
-          toast: true, position: 'top-end', icon: simResult.success ? 'success' : 'error', 
-          title: `${simResult.success ? 'Rute Berhasil' : 'Gagal Target'} (+${points} Poin)`, 
+          toast: true, position: 'top-end', icon: points >= 2 ? 'success' : (points === 1 ? 'info' : 'error'), 
+          title: `${points >= 2 ? 'Rute Ditemukan' : 'Gagal Target'} (+${points} Poin)`, 
           text: pmb, showConfirmButton: false, timer: 3000 
         });
 
@@ -869,7 +860,7 @@
             <span class="${log.status ? 'text-emerald-700 bg-emerald-200' : 'text-amber-700 bg-amber-200'} px-2 py-0.5 rounded text-[10px] uppercase font-black">+${log.points} Poin</span>
           </div>
           <div><strong class="text-slate-500">Jawaban/Jalur Kamu:</strong> ${log.jawabanSiswa}</div>
-          <div><strong class="text-slate-500">Kunci Jawaban/Optimal:</strong> <span class="text-emerald-700 font-bold">${log.jawabanBenar}</span></div>
+          <div><strong class="text-slate-500">Kunci/Optimal:</strong> <span class="text-emerald-700 font-bold">${log.jawabanBenar}</span></div>
           <div class="bg-white p-2.5 rounded-xl border border-slate-200 mt-1"><strong class="text-emerald-800">Evaluasi:</strong> ${log.pembahasan}</div>
         `;
         revContainer.appendChild(item);
